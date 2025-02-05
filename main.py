@@ -18,10 +18,10 @@ def get_mp3_mapping():
         if os.path.isdir(folder_path):
             for file in os.listdir(folder_path):
                 if file.endswith(".mp3"):
-                    parts = file.split('.', 1)
-                    if len(parts) == 2:
-                        name = parts[1].replace(".mp3", "").strip()
-                        mp3_mapping[name] = os.path.join(folder_path, file)
+                    # 直接取文件名，去掉.mp3后缀
+                    name = file[:-4]  # 移除 '.mp3'
+                    mp3_mapping[name] = os.path.join(folder_path, file)
+    print("MP3 Mapping:", mp3_mapping)  # 调试用
     return mp3_mapping
 
 MP3_MAPPING = get_mp3_mapping()
@@ -84,11 +84,16 @@ class PDFPlayerApp(tk.Tk):
         self.current_pdf = pdf_name
         self.current_page = 0
         self.pdf_document = fitz.open(os.path.join(PDF_PATH, self.current_folder, pdf_name + ".pdf"))
-
-        # 处理 PDF 名字，去掉 "001. " 这样的前缀
-        clean_pdf_name = pdf_name.split('. ', 1)[-1] if '. ' in pdf_name else pdf_name
-        self.audio_path = MP3_MAPPING.get(clean_pdf_name, None)
-
+        
+        # 移除PDF文件名中的序号前缀
+        clean_pdf_name = pdf_name.split('. ', 1)[1] if '. ' in pdf_name else pdf_name
+        self.audio_path = MP3_MAPPING.get(clean_pdf_name)
+        
+        if self.audio_path:
+            print(f"Found audio: {self.audio_path}")  # 调试用
+        else:
+            print(f"No audio found for: {clean_pdf_name}")  # 调试用
+            
         self.show_pdf_page()
 
     # 显示PDF页面
