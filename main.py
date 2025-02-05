@@ -3,7 +3,6 @@ import fitz  # PyMuPDF
 import pygame
 import tkinter as tk
 from tkinter import ttk
-from tkinter import filedialog
 from PIL import Image, ImageTk
 
 # 资源路径
@@ -21,7 +20,7 @@ def get_mp3_mapping():
                 if file.endswith(".mp3"):
                     parts = file.split('.', 1)
                     if len(parts) == 2:
-                        name = parts[1].replace(".mp3", "")
+                        name = parts[1].replace(".mp3", "").strip()
                         mp3_mapping[name] = os.path.join(folder_path, file)
     return mp3_mapping
 
@@ -68,7 +67,7 @@ class PDFPlayerApp(tk.Tk):
 
         pdf_folder = os.path.join(PDF_PATH, folder)
         pdf_files = [f[:-4] for f in os.listdir(pdf_folder) if f.endswith(".pdf")]
-        
+
         for pdf in sorted(pdf_files):
             listbox.insert(tk.END, pdf)
 
@@ -85,7 +84,11 @@ class PDFPlayerApp(tk.Tk):
         self.current_pdf = pdf_name
         self.current_page = 0
         self.pdf_document = fitz.open(os.path.join(PDF_PATH, self.current_folder, pdf_name + ".pdf"))
-        self.audio_path = MP3_MAPPING.get(pdf_name, None)
+
+        # 处理 PDF 名字，去掉 "001. " 这样的前缀
+        clean_pdf_name = pdf_name.split('. ', 1)[-1] if '. ' in pdf_name else pdf_name
+        self.audio_path = MP3_MAPPING.get(clean_pdf_name, None)
+
         self.show_pdf_page()
 
     # 显示PDF页面
@@ -95,7 +98,7 @@ class PDFPlayerApp(tk.Tk):
 
         self.clear_screen()
 
-        tk.Button(self, text="返回", command=lambda: self.show_pdf_list(self.current_folder)).pack(pady=5)
+        tk.Button(self, text="返回", command=lambda: self.back_to_pdf_list()).pack(pady=5)
 
         frame = tk.Frame(self)
         frame.pack()
@@ -149,6 +152,11 @@ class PDFPlayerApp(tk.Tk):
     # 停止音频
     def stop_audio(self):
         pygame.mixer.music.stop()
+
+    # 返回 PDF 列表时，自动停止音频
+    def back_to_pdf_list(self):
+        self.stop_audio()
+        self.show_pdf_list(self.current_folder)
 
     # 清空屏幕
     def clear_screen(self):
