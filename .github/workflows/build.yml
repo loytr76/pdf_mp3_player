@@ -1,0 +1,27 @@
+name: Build EXE
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: pip install pyinstaller pymupdf pygame pillow
+
+      - name: Build EXE
+        run: pyinstaller --onefile --windowed main.py
+
+      - name: Upload EXE
+        uses: actions/upload-artifact@v2
+        with:
+          name: exe-build
+          path: dist/main.exe
